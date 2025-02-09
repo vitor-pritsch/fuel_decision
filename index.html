@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AVIATION FUEL DECISION TOOL</title>
+  <style>
+    /* Reset and base styling */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 10px;
+      transition: background 0.3s, color 0.3s;
+    }
+    .container {
+      background: #fff;
+      padding: 20px 25px;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: background 0.3s, color 0.3s;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+      color: darkblue;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 2px solid darkblue;
+      padding-bottom: 10px;
+    }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+    .form-group input {
+      width: 100%; padding: 10px; font-size: 1rem;
+      border: 1px solid #ddd; border-radius: 5px;
+    }
+    button {
+      width: 100%; padding: 10px; font-size: 1rem;
+      border: none; border-radius: 5px;
+      background: #007bff; color: #fff; cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover { background: #0056b3; }
+    .result { margin-top: 20px; text-align: center; }
+    .toggle-container {
+      display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px;
+    }
+    .toggle-text { margin-right: 10px; font-size: 1rem; font-weight: bold; }
+    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc; transition: 0.4s; border-radius: 26px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
+      background-color: white; transition: 0.4s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #007bff; }
+    input:checked + .slider:before { transform: translateX(24px); }
+
+    /* Dark mode */
+    .dark-mode { background: #333; color: #f0f4f8; }
+    .dark-mode .container { background: #444; color: #f0f4f8; }
+    .dark-mode input, .dark-mode button { background: #555; color: #f0f4f8; border: 1px solid #666; }
+    .dark-mode button { background: #007bff; }
+    .dark-mode h1 { color: #89CFF0; border-bottom-color: #89CFF0; }
+
+    @media (max-width: 400px) {
+      .container { padding: 15px 20px; }
+      h1 { font-size: 1.5rem; }
+    }
+    .developer {
+      margin-top: 20px; font-size: 0.9rem; color: #666; text-align: center;
+    }
+    .dark-mode .developer { color: #bbb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="toggle-container">
+      <span class="toggle-text">Dark Mode</span>
+      <label class="switch">
+        <input type="checkbox" id="darkModeToggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <h1>AVIATION FUEL DECISION TOOL</h1>
+    <form id="fuelForm">
+      <div class="form-group">
+        <label for="frf">Final Reserve Fuel (FRF)</label>
+        <input type="number" id="frf" name="frf" min="0" step="100" placeholder="Enter FRF" required />
+      </div>
+      <div class="form-group">
+        <label for="alternate">Alternate Fuel</label>
+        <input type="number" id="alternate" name="alternate" min="0" step="100" placeholder="Enter Alternate Fuel" required />
+      </div>
+      <div class="form-group">
+        <label for="predicted">Predicted Usable Fuel on Landing</label>
+        <input type="number" id="predicted" name="predicted" min="0" step="100" placeholder="Enter Predicted Fuel" required />
+      </div>
+      <button type="submit">Check Fuel State</button>
+    </form>
+    <div id="result" class="result"></div>
+  </div>
+  <p class="developer">Developed by Capt. Vitor Pritsch</p>
+  <script>
+    const darkToggle = document.getElementById("darkModeToggle"),
+          form = document.getElementById("fuelForm"),
+          resultDiv = document.getElementById("result");
+    darkToggle.addEventListener("change", () => document.body.classList.toggle("dark-mode", darkToggle.checked));
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const frf = parseInt(document.getElementById("frf").value, 10),
+            alternate = parseInt(document.getElementById("alternate").value, 10),
+            predicted = parseInt(document.getElementById("predicted").value, 10);
+      if (isNaN(frf) || isNaN(alternate) || isNaN(predicted)) {
+        resultDiv.innerText = "Please enter valid numbers in all fields.";
+        return;
+      }
+      let decision = "", color = "", disclaimer = "";
+      if (predicted >= frf + alternate) {
+        decision = "Continue Destination.";
+        color = document.body.classList.contains("dark-mode") ? "lightgray" : "black";
+      } else if (predicted === frf) {
+        decision = "MINIMUM FUEL";
+        color = "darkgoldenrod";
+      } else if (predicted > frf) {
+        decision = "Continue flight or Commit to destination";
+        color = document.body.classList.contains("dark-mode") ? "lightgray" : "black";
+        disclaimer = "The Commander may elect to continue or commit to the destination aerodrome, as long as landing is assured with at least FRF remaining at touchdown. Refer OM-A.";
+      } else {
+        decision = "MAYDAY, MAYDAY, MAYDAY, FUEL!";
+        color = "red";
+      }
+      resultDiv.innerHTML = `<p style="color:${color}; font-weight:bold; font-size:2rem;">${decision}</p>` +
+                            (disclaimer ? `<p style="font-size:0.9rem;">${disclaimer}</p>` : "");
+    });
+  </script>
+</body>
+</html>
